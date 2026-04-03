@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Bootcamp — Knowledge Graph Explorer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f7f5f0;
+  --bg2: #eeeae0;
+  --bg3: #e6e1d4;
+  --card: #ffffff;
+  --border: rgba(26,36,80,0.10);
+  --border-hi: rgba(26,36,80,0.22);
+  --text: #1a2450;
+  --text2: #4a5580;
+  --text3: #8a95b8;
+  --accent: #c9aa5a;
+  --accent2: #c8c0f0;
+  --accent3: #1a2450;
+  --accent4: #d4b8f0;
+  --accent5: #7b6fc8;
+  --navy: #1a2450;
+  --butter: #c9aa5a;
+  --lavender: #c8c0f0;
+  --ff-title: 'DM Serif Display', serif;
+  --ff-body: 'DM Sans', sans-serif;
+  --ff-mono: 'DM Mono', monospace;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--ff-body);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* HEADER */
+header {
+  padding: 48px 40px 32px;
+  border-bottom: 0.5px solid var(--border);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  background: var(--navy);
+}
+
+.header-title {
+  font-family: var(--ff-title);
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.1;
+  color: #ffffff;
+  font-style: italic;
+}
+
+.header-title em {
+  color: var(--butter);
+  font-style: normal;
+}
+
+.header-sub {
+  color: var(--lavender);
+  font-size: 13px;
+  margin-top: 6px;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+}
+
+.header-stats {
+  display: flex;
+  gap: 24px;
+  flex-shrink: 0;
+}
+
+.stat {
+  text-align: right;
+}
+
+.stat-n {
+  font-family: var(--ff-mono);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--butter);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--lavender);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+
+/* CONTROLS */
+.controls {
+  padding: 20px 40px;
+  border-bottom: 0.5px solid var(--border);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(247,245,240,0.95);
+  backdrop-filter: blur(12px);
+}
+
+.search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.search-wrap svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+#search {
+  width: 100%;
+  background: #ffffff;
+  border: 0.5px solid var(--border-hi);
+  color: var(--text);
+  padding: 8px 12px 8px 36px;
+  border-radius: 6px;
+  font-family: var(--ff-body);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+#search:focus {
+  border-color: var(--navy);
+}
+
+#search::placeholder { color: var(--text3); }
+
+.filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  background: #ffffff;
+  border: 0.5px solid var(--border-hi);
+  color: var(--text2);
+  padding: 5px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--ff-body);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.filter-btn:hover { border-color: var(--navy); color: var(--navy); }
+
+.filter-btn.active {
+  background: var(--navy);
+  color: var(--butter);
+  border-color: var(--navy);
+  font-weight: 500;
+}
+
+.category-filter {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cat-btn {
+  background: transparent;
+  border: 0.5px solid var(--border-hi);
+  color: var(--text3);
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: var(--ff-mono);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.cat-btn:hover { color: var(--navy); border-color: var(--navy); }
+.cat-btn.active { color: var(--navy); border-color: var(--navy); font-weight: 500; }
+
+/* LAYOUT */
+.main {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  min-height: calc(100vh - 200px);
+}
+
+/* GRID */
+.grid-area {
+  padding: 24px 40px;
+  border-right: 0.5px solid var(--border);
+}
+
+.section-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: var(--butter);
+  border-radius: 1px;
+}
+
+.result-count {
+  font-family: var(--ff-mono);
+  color: var(--text3);
+  font-size: 11px;
+}
+
+.concepts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+/* CONCEPT CARD */
+.concept-card {
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.18s;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(26,36,80,0.06);
+}
+
+.concept-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--card-accent, var(--border));
+  transition: background 0.2s;
+}
+
+.concept-card:hover {
+  border-color: var(--border-hi);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26,36,80,0.10);
+}
+
+.concept-card.selected {
+  border-color: var(--navy);
+  background: rgba(26,36,80,0.04);
+}
+
+.concept-card.selected::before {
+  background: var(--navy);
+}
+
+.concept-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--navy);
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.concept-week {
+  font-size: 10px;
+  font-family: var(--ff-mono);
+  color: var(--text3);
+  margin-bottom: 6px;
+}
+
+.concept-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.tag {
+  font-size: 10px;
+  font-family: var(--ff-mono);
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--bg2);
+  color: var(--text3);
+  border: 0.5px solid var(--border);
+}
+
+.tag.cat-tag {
+  color: var(--cat-color, var(--text3));
+  border-color: var(--cat-color, var(--border));
+  background: transparent;
+}
+
+/* DETAIL PANEL */
+.detail-panel {
+  padding: 24px 28px;
+  overflow-y: auto;
+  max-height: calc(100vh - 160px);
+  position: sticky;
+  top: 160px;
+  background: #fff;
+  border-left: 0.5px solid var(--border);
+}
+
+.detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  text-align: center;
+  color: var(--text3);
+}
+
+.detail-empty-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+
+.detail-empty p {
+  font-size: 13px;
+  max-width: 200px;
+  line-height: 1.5;
+}
+
+.detail-header {
+  margin-bottom: 20px;
+}
+
+.detail-name {
+  font-family: var(--ff-title);
+  font-size: 22px;
+  line-height: 1.2;
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+
+.detail-week-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-family: var(--ff-mono);
+  color: #fff;
+  background: var(--navy);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.detail-section {
+  margin-bottom: 20px;
+}
+
+.detail-section-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.triplet {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 0.5px solid var(--border);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.triplet:last-child { border-bottom: none; }
+
+.triplet-subject {
+  color: var(--navy);
+  font-family: var(--ff-mono);
+  font-size: 11px;
+  min-width: 80px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  word-break: break-all;
+}
+
+.triplet-pred {
+  color: var(--text3);
+  font-style: italic;
+  font-size: 11px;
+  min-width: 80px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.triplet-obj {
+  color: var(--text2);
+  flex: 1;
+}
+
+.triplet-context {
+  display: block;
+  font-size: 10px;
+  color: var(--text3);
+  font-family: var(--ff-mono);
+  margin-top: 2px;
+}
+
+.related-links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.related-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 0.5px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text2);
+  font-size: 12px;
+  transition: all 0.15s;
+}
+
+.related-link:hover {
+  border-color: var(--navy);
+  color: var(--navy);
+}
+
+.related-link-pred {
+  font-size: 10px;
+  font-family: var(--ff-mono);
+  color: var(--text3);
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+/* WEEK SECTIONS */
+.week-section { margin-bottom: 32px; }
+.week-title {
+  font-family: var(--ff-title);
+  font-size: 18px;
+  color: var(--navy);
+  margin-bottom: 4px;
+}
+
+.week-theme {
+  font-size: 12px;
+  color: var(--text3);
+  margin-bottom: 16px;
+  font-style: italic;
+}
+
+/* CAT COLORS — all readable on white/cream cards */
+.cat-ai { --cat-color: #1a2450; }
+.cat-python { --cat-color: #5a50b0; }
+.cat-ml { --cat-color: #b07820; }
+.cat-rag { --cat-color: #7050c0; }
+.cat-agents { --cat-color: #c04060; }
+.cat-pm { --cat-color: #106868; }
+.cat-eval { --cat-color: #806020; }
+.cat-green { --cat-color: #286820; }
+.cat-legal { --cat-color: #8040b0; }
+.cat-speech { --cat-color: #a04020; }
+
+.no-results {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text3);
+  font-size: 14px;
+}
+
+/* PREDICATE BADGE */
+.pred-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-family: var(--ff-mono);
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--bg2);
+  color: var(--text2);
+  border: 0.5px solid var(--border);
+  margin-right: 4px;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--lavender); border-radius: 2px; }
+
+@media (max-width: 900px) {
+  .main { grid-template-columns: 1fr; }
+  .detail-panel { position: static; max-height: none; border-top: 0.5px solid var(--border); }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="header-title">Knowledge <em>Graph</em><br>Explorer</div>
+    <div class="header-sub">AI Consulting Bootcamp — 9 weeks of concepts, relationships &amp; predicates</div>
+  </div>
+  <div class="header-stats">
+    <div class="stat">
+      <div class="stat-n" id="stat-concepts">—</div>
+      <div class="stat-label">Concepts</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n" id="stat-triplets">—</div>
+      <div class="stat-label">Triplets</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n">9</div>
+      <div class="stat-label">Weeks</div>
+    </div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="search-wrap">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="5"/><path d="M10.5 10.5L15 15" stroke-linecap="round"/></svg>
+    <input type="text" id="search" placeholder="Search concepts, predicates, objects…" autocomplete="off">
+  </div>
+  <div class="filters" id="week-filters">
+    <button class="filter-btn active" data-week="all">All</button>
+    <button class="filter-btn" data-week="1">W1</button>
+    <button class="filter-btn" data-week="2">W2</button>
+    <button class="filter-btn" data-week="3">W3</button>
+    <button class="filter-btn" data-week="4">W4</button>
+    <button class="filter-btn" data-week="5">W5</button>
+    <button class="filter-btn" data-week="6">W6</button>
+    <button class="filter-btn" data-week="7">W7</button>
+    <button class="filter-btn" data-week="8">W8</button>
+    <button class="filter-btn" data-week="9">W9</button>
+  </div>
+  <div class="category-filter" id="cat-filters">
+    <button class="cat-btn active" data-cat="all">all cats</button>
+    <button class="cat-btn" data-cat="ai">ai</button>
+    <button class="cat-btn" data-cat="ml">ml/nn</button>
+    <button class="cat-btn" data-cat="python">python</button>
+    <button class="cat-btn" data-cat="rag">rag</button>
+    <button class="cat-btn" data-cat="agents">agents</button>
+    <button class="cat-btn" data-cat="pm">pm</button>
+    <button class="cat-btn" data-cat="eval">eval</button>
+    <button class="cat-btn" data-cat="legal">legal</button>
+    <button class="cat-btn" data-cat="green">green</button>
+    <button class="cat-btn" data-cat="speech">speech</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="grid-area">
+    <div class="section-label"><span>Concepts</span><span class="result-count" id="result-count"></span></div>
+    <div class="concepts-grid" id="concepts-grid"></div>
+    <div class="no-results" id="no-results" style="display:none">No concepts match your search</div>
+  </div>
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-empty">
+      <div class="detail-empty-icon">⬡</div>
+      <p>Click any concept card to explore its relationships</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = [
+  // WEEK 1 — AI LITERACY
+  { id:"agentic-ai", name:"Agentic AI", week:1, cats:["ai","agents"],
+    triplets:[
+      {s:"Agentic AI",p:"denotes",o:"AI systems that autonomously plan, select tools, and execute multi-step tasks",ctx:"Week 1, AI Literacy"},
+      {s:"LangChain",p:"orchestrates",o:"agentic AI workflows via composable chains and tool bindings",ctx:"Week 3"},
+      {s:"LangGraph",p:"implements",o:"stateful agentic AI with graph-based control flow",ctx:"Week 4"},
+      {s:"n8n AI Agent node",p:"runs",o:"agentic AI logic within no-code workflows",ctx:"Week 4"},
+      {s:"ReAct pattern",p:"drives",o:"agentic AI reasoning–acting loop",ctx:"Week 4"},
+    ]},
+  { id:"narrow-ai", name:"Narrow AI", week:1, cats:["ai"],
+    triplets:[{s:"Narrow AI",p:"specializes",o:"AI capability confined to a single domain or task",ctx:"Week 1"}]},
+  { id:"agi", name:"AGI", week:1, cats:["ai"],
+    triplets:[{s:"AGI",p:"specializes",o:"hypothetical AI capable of human-level reasoning across any domain",ctx:"Week 1"}]},
+  { id:"llm", name:"Large Language Models (LLMs)", week:1, cats:["ai"],
+    triplets:[
+      {s:"LLM",p:"specializes",o:"transformer-scale language model pre-trained on large text corpora",ctx:"Week 1"},
+      {s:"Generative AI",p:"relies-on",o:"LLMs as the core generation model class",ctx:"Week 1"},
+    ]},
+  { id:"multimodal-ai", name:"Multimodal AI", week:1, cats:["ai"],
+    triplets:[
+      {s:"Multimodal AI",p:"specializes",o:"AI that processes and generates across vision, audio, and text simultaneously",ctx:"Week 1"},
+      {s:"Multimodal AI",p:"enables",o:"joint reasoning over images, speech, and text in a single model pass",ctx:"Week 1"},
+      {s:"Vision API",p:"implements",o:"multimodal AI for image-plus-text LLM inputs",ctx:"Week 1"},
+    ]},
+  { id:"moravecs-paradox", name:"Moravec's Paradox", week:1, cats:["ai"],
+    triplets:[{s:"Moravec's paradox",p:"illustrates",o:"that tasks trivial for humans are computationally hard for AI, and vice versa",ctx:"Week 1"}]},
+  { id:"conda", name:"Conda", week:1, cats:["python"],
+    triplets:[{s:"Conda",p:"isolates",o:"Python runtime environments per project to prevent dependency conflicts",ctx:"Week 1"}]},
+  { id:"git", name:"Git / GitHub", week:1, cats:["python"],
+    triplets:[
+      {s:"Git",p:"tracks",o:"version history of code and content through commits and branches",ctx:"Week 1"},
+      {s:"GitHub",p:"hosts",o:"remote repositories and pull-request-based collaboration workflows",ctx:"Week 1"},
+    ]},
+  { id:"pandas", name:"Pandas & Data Manipulation", week:1, cats:["python","ml"],
+    triplets:[
+      {s:"Pandas",p:"loads-and-transforms",o:"tabular data for filtering, grouping, aggregation, and export",ctx:"Week 1"},
+      {s:"Descriptive statistics",p:"summarizes",o:"column distributions, central tendency, and spread",ctx:"Week 1"},
+      {s:"Feature engineering",p:"derives",o:"new columns from raw fields to improve model input quality",ctx:"Week 1"},
+      {s:"Missing values",p:"require",o:"cleaning or imputation before model training",ctx:"Week 1"},
+    ]},
+  { id:"supervised-learning", name:"Supervised Learning", week:1, cats:["ml"],
+    triplets:[
+      {s:"Supervised learning",p:"trains",o:"models on labeled input–output pairs",ctx:"Week 1"},
+      {s:"Supervised learning",p:"produces",o:"classifiers and regressors for prediction tasks",ctx:"Week 1"},
+    ]},
+  { id:"unsupervised-learning", name:"Unsupervised Learning", week:1, cats:["ml"],
+    triplets:[
+      {s:"Unsupervised learning",p:"discovers",o:"structure in data without labeled targets",ctx:"Week 1"},
+      {s:"Unsupervised learning",p:"produces",o:"clusters and dimensionality reductions",ctx:"Week 1"},
+    ]},
+  { id:"knn", name:"K-Nearest Neighbors (KNN)", week:1, cats:["ml"],
+    triplets:[
+      {s:"KNN",p:"specializes",o:"distance-based supervised classification",ctx:"Week 1"},
+      {s:"Scikit-learn",p:"implements",o:"KNN and other classical ML estimators",ctx:"Week 1"},
+    ]},
+  { id:"fine-tuning", name:"Fine-Tuning", week:1, cats:["ml","ai"],
+    triplets:[
+      {s:"Fine-tuning",p:"specializes",o:"supervised training that updates a pre-trained model's weights on domain-specific data",ctx:"Week 1"},
+      {s:"Fine-tuning",p:"contrasts-with",o:"RAG: fine-tuning bakes knowledge into weights; RAG retrieves at inference time",ctx:"Week 1–3"},
+      {s:"Fine-tuning",p:"preferred-when",o:"domain knowledge is stable, high-volume, and latency-sensitive",ctx:"Week 1"},
+      {s:"Fine-tuning",p:"avoid-when",o:"knowledge changes frequently or proprietary data cannot leave the org",ctx:"Week 1"},
+      {s:"Fine-tuning",p:"increases-cost",o:"relative to prompting due to compute and data-preparation overhead",ctx:"Week 1"},
+    ]},
+  { id:"deep-learning", name:"Deep Learning & Neural Networks", week:1, cats:["ml"],
+    triplets:[
+      {s:"Deep learning",p:"specializes",o:"machine learning using multi-layer neural networks",ctx:"Week 1"},
+      {s:"Neural network",p:"specializes",o:"machine learning model composed of interconnected layers of neurons",ctx:"Week 1"},
+      {s:"Feedforward neural network",p:"trained-via",o:"backpropagation and gradient descent",ctx:"Week 1"},
+      {s:"Activation function",p:"introduces",o:"nonlinearity into neural network layer outputs",ctx:"Week 1"},
+      {s:"Overfitting",p:"occurs-when",o:"a model memorizes training data and fails to generalize",ctx:"Week 1"},
+      {s:"Keras",p:"provides",o:"high-level API for defining, compiling, and training neural network layers",ctx:"Week 1"},
+      {s:"TensorFlow",p:"backs",o:"Keras computation graph construction and distributed execution",ctx:"Week 1"},
+    ]},
+  { id:"generative-ai", name:"Generative AI", week:1, cats:["ai"],
+    triplets:[
+      {s:"Generative AI",p:"produces",o:"new text, images, or audio by sampling from learned probability distributions",ctx:"Week 1"},
+      {s:"Encoder–decoder",p:"transforms",o:"an input sequence into a context vector and decodes it into an output",ctx:"Week 1"},
+      {s:"Attention mechanism",p:"weights",o:"token relevance across a sequence for context integration",ctx:"Week 1"},
+      {s:"Chat Completions API",p:"structures",o:"LLM interactions as a sequence of role-tagged message turns",ctx:"Week 1"},
+      {s:"Temperature",p:"controls",o:"LLM token sampling randomness during decoding",ctx:"Week 1"},
+      {s:"Pydantic",p:"validates",o:"structured output by enforcing typed field schemas on LLM responses",ctx:"Week 1"},
+    ]},
+  { id:"system-prompt", name:"System Prompt", week:1, cats:["ai"],
+    triplets:[
+      {s:"System prompt",p:"constrains",o:"LLM behavior, persona, and output format across all turns in a session",ctx:"Week 1–2"},
+      {s:"System prompt",p:"preferred-when",o:"consistent behavior must be enforced regardless of user turn content",ctx:"Week 1–2"},
+      {s:"System prompt",p:"overridden-by",o:"prompt injection attacks that insert conflicting instructions",ctx:"Week 4"},
+    ]},
+  { id:"whisper", name:"Whisper (Speech-to-Text)", week:1, cats:["speech"],
+    triplets:[
+      {s:"Whisper",p:"implements",o:"STT via transformer-based audio encoding",ctx:"Week 1"},
+      {s:"Whisper",p:"handles",o:"long-form audio through sequential chunked transcription",ctx:"Week 1"},
+      {s:"WER",p:"measures",o:"STT transcription accuracy at the word level",ctx:"Week 1"},
+      {s:"WER",p:"computed-as",o:"(substitutions + deletions + insertions) / reference word count",ctx:"Week 1"},
+    ]},
+  { id:"tts", name:"Text-to-Speech (TTS)", week:1, cats:["speech"],
+    triplets:[
+      {s:"TTS",p:"synthesizes",o:"speech audio from text input",ctx:"Week 1"},
+      {s:"TTS providers",p:"include",o:"OpenAI TTS, ElevenLabs, and Google Cloud TTS",ctx:"Week 1–2"},
+    ]},
+
+  // WEEK 2 — PROMPTING, APIs, RAG INTRO
+  { id:"prompt-engineering", name:"Prompt Engineering", week:2, cats:["ai"],
+    triplets:[
+      {s:"Prompt engineering",p:"shapes",o:"LLM behavior through carefully structured input instructions",ctx:"Week 2"},
+      {s:"Few-shot prompting",p:"primes",o:"LLM behavior by embedding worked examples directly in the prompt",ctx:"Week 2"},
+      {s:"Chain-of-thought",p:"elicits",o:"step-by-step reasoning from the LLM before it produces a final answer",ctx:"Week 2"},
+      {s:"Chain-of-thought",p:"improves",o:"accuracy on multi-step arithmetic and logical reasoning tasks",ctx:"Week 2"},
+      {s:"Few-shot prompting",p:"preferred-when",o:"desired output format is hard to describe but easy to demonstrate",ctx:"Week 2"},
+    ]},
+  { id:"token-economics", name:"Token Economics", week:2, cats:["ai","python"],
+    triplets:[
+      {s:"Token economics",p:"governs",o:"cost structure of LLM API calls billed separately for input and output",ctx:"Week 2"},
+      {s:"Latency",p:"measures",o:"elapsed time from request submission to first token or full response",ctx:"Week 2"},
+      {s:"Throughput",p:"measures",o:"requests or tokens processed per unit of time",ctx:"Week 2"},
+      {s:"Streaming",p:"reduces",o:"perceived latency by delivering tokens incrementally",ctx:"Week 2"},
+      {s:"Batch inference",p:"increases",o:"throughput at the cost of per-request latency",ctx:"Week 2"},
+    ]},
+  { id:"api-patterns", name:"API Integration Patterns", week:2, cats:["python"],
+    triplets:[
+      {s:"API rate limit",p:"caps",o:"requests, tokens, or concurrent connections per time window",ctx:"Week 2"},
+      {s:"Exponential backoff",p:"spaces-out",o:"retry attempts with progressively longer delays",ctx:"Week 2"},
+      {s:"Jitter",p:"randomizes",o:"retry intervals to prevent synchronized retry storms",ctx:"Week 2"},
+      {s:"Circuit breaker",p:"halts",o:"outbound requests to a failing service to prevent cascading failures",ctx:"Week 2"},
+      {s:"Provider fallback",p:"reroutes",o:"LLM requests to a secondary provider when the primary fails",ctx:"Week 2"},
+      {s:"Token budget manager",p:"reduces-cost",o:"by truncating or summarizing context before hitting token ceilings",ctx:"Week 2"},
+    ]},
+  { id:"rag", name:"RAG (Retrieval-Augmented Generation)", week:2, cats:["rag","ai"],
+    triplets:[
+      {s:"RAG",p:"grounds",o:"LLM responses in retrieved, domain-specific document passages",ctx:"Week 2–3"},
+      {s:"RAG",p:"reduces",o:"hallucination by anchoring outputs to retrieved evidence",ctx:"Week 2–3"},
+      {s:"RAG",p:"fails-when",o:"retrieval quality is low or chunks are poorly formed",ctx:"Week 2–3"},
+      {s:"RAG",p:"preferred-when",o:"domain knowledge changes frequently or is proprietary",ctx:"Week 2–3"},
+      {s:"RAG",p:"avoid-when",o:"latency is critical and the knowledge base is static",ctx:"Week 2–3"},
+      {s:"RAG",p:"contrasts-with",o:"fine-tuning: RAG retrieves at inference; fine-tuning bakes into weights",ctx:"Week 2–3"},
+    ]},
+  { id:"embeddings", name:"Embeddings", week:2, cats:["rag","ml"],
+    triplets:[
+      {s:"Embeddings",p:"represent",o:"text as dense numerical vectors in a continuous semantic space",ctx:"Week 2–3"},
+      {s:"Embeddings",p:"enable",o:"similarity-based retrieval via vector distance metrics",ctx:"Week 2–3"},
+      {s:"Embeddings",p:"produced-by",o:"OpenAI embeddings API (text-embedding-3-* family)",ctx:"Week 2–3"},
+      {s:"Embeddings",p:"indexed-by",o:"Pinecone for managed large-scale approximate nearest-neighbor retrieval",ctx:"Week 2–3"},
+      {s:"Embeddings",p:"degrades-when",o:"input text exceeds the embedding model's maximum token window",ctx:"Week 2–3"},
+    ]},
+  { id:"chunking", name:"Chunking Strategies", week:2, cats:["rag"],
+    triplets:[
+      {s:"Chunking",p:"splits",o:"source documents into smaller text segments for embedding and retrieval",ctx:"Week 2"},
+      {s:"Fixed-size chunking",p:"preferred-when",o:"documents are uniform in structure and processing speed is the priority",ctx:"Week 2"},
+      {s:"Fixed-size chunking",p:"loses",o:"semantic coherence when splits occur mid-sentence",ctx:"Week 2"},
+      {s:"Recursive character chunking",p:"preferred-when",o:"documents mix prose and code with varying structural nesting",ctx:"Week 2"},
+      {s:"Token-based chunking",p:"preferred-when",o:"prompt token budgets must be precisely controlled",ctx:"Week 2"},
+      {s:"Semantic chunking",p:"preferred-when",o:"documents have variable-density content and retrieval precision matters",ctx:"Week 2"},
+      {s:"Semantic chunking",p:"increases-cost",o:"relative to fixed-size chunking due to embedding every sentence boundary",ctx:"Week 2"},
+      {s:"Chunk overlap",p:"preserves",o:"cross-boundary context by sharing tokens between adjacent chunks",ctx:"Week 2"},
+    ]},
+  { id:"pinecone", name:"Pinecone (Vector DB)", week:2, cats:["rag"],
+    triplets:[
+      {s:"Pinecone",p:"implements",o:"managed vector database for embedding storage and retrieval",ctx:"Week 2–3"},
+      {s:"Pinecone",p:"known-for",o:"real-time upsert and approximate nearest-neighbor query at scale",ctx:"Week 2–3"},
+      {s:"Pinecone",p:"used-by",o:"autonomous research agent for semantic retrieval of company research embeddings",ctx:"Week 5"},
+      {s:"Vector database",p:"indexes",o:"embeddings for approximate nearest-neighbor retrieval at scale",ctx:"Week 2–3"},
+    ]},
+  { id:"grounding", name:"Grounding", week:2, cats:["rag","ai"],
+    triplets:[
+      {s:"Grounding",p:"reduces",o:"hallucination by anchoring LLM outputs to retrieved or verified facts",ctx:"Week 2–3"},
+      {s:"Grounding",p:"implemented-via",o:"RAG retrieval, function calling, or structured knowledge injection",ctx:"Week 2–3"},
+      {s:"Grounding",p:"contrasts-with",o:"parametric knowledge baked into model weights at training time",ctx:"Week 2–3"},
+      {s:"Grounding",p:"fails-when",o:"retrieved context is outdated, incomplete, or semantically distant",ctx:"Week 2–3"},
+    ]},
+
+  // WEEK 3 — LANGCHAIN, RAG PIPELINE, MCP
+  { id:"langchain", name:"LangChain", week:3, cats:["agents","rag"],
+    triplets:[
+      {s:"LangChain",p:"orchestrates",o:"LLM calls, tool invocations, and memory into composable chains",ctx:"Week 3"},
+      {s:"LangChain",p:"abstracts",o:"multiple LLM providers behind a unified interface",ctx:"Week 3"},
+      {s:"LangChain",p:"implements",o:"RAG pipeline via retrievers, prompt templates, and model chains",ctx:"Week 3"},
+      {s:"LangChain memory",p:"persists",o:"conversation history across turns for contextual multi-turn replies",ctx:"Week 3"},
+      {s:"Prompt caching",p:"reduces-cost",o:"by up to 90% on repeated long-prefix API calls",ctx:"Week 3"},
+      {s:"Prompt caching",p:"fails-when",o:"the prompt prefix changes between calls, invalidating cached KV state",ctx:"Week 3"},
+    ]},
+  { id:"function-calling", name:"Function Calling", week:3, cats:["agents","ai"],
+    triplets:[
+      {s:"Function calling",p:"enables",o:"LLM to invoke structured, schema-defined API calls as part of generation",ctx:"Week 3"},
+      {s:"Function calling",p:"contrasts-with",o:"free-form text generation: outputs are validated JSON matching a schema",ctx:"Week 3"},
+      {s:"LangChain tool binding",p:"attaches",o:"callable functions to an LLM, enabling it to invoke external APIs",ctx:"Week 3"},
+    ]},
+  { id:"rag-pipeline", name:"RAG Pipeline (Advanced)", week:3, cats:["rag"],
+    triplets:[
+      {s:"RAG pipeline",p:"orchestrates",o:"document ingestion, chunking, embedding, indexing, retrieval, and generation",ctx:"Week 2–3"},
+      {s:"RAG pipeline",p:"fails-when",o:"chunk overlap is zero and the answer spans a segment boundary",ctx:"Week 3"},
+      {s:"HyDE",p:"generates",o:"a hypothetical answer document to use as the retrieval query embedding",ctx:"Week 3"},
+      {s:"Reranker",p:"re-scores",o:"an initial retrieval set to surface the most contextually relevant chunks",ctx:"Week 3"},
+      {s:"Reranker",p:"trades-off",o:"additional query latency for higher retrieval precision",ctx:"Week 3"},
+      {s:"Cross-encoder",p:"scores",o:"query–document pairs jointly for higher-fidelity relevance scores",ctx:"Week 3"},
+      {s:"Metadata filtering",p:"constrains",o:"vector retrieval to documents matching structured field conditions",ctx:"Week 3"},
+      {s:"Parent document retrieval",p:"balances",o:"retrieval precision (small chunks) with generation context (large chunks)",ctx:"Week 3"},
+      {s:"Sub-query decomposition",p:"breaks",o:"a complex question into independent simpler sub-questions for parallel retrieval",ctx:"Week 3"},
+      {s:"HyDE",p:"improves",o:"retrieval recall for questions with sparse keyword overlap in the corpus",ctx:"Week 3"},
+    ]},
+  { id:"mcp", name:"MCP (Model Context Protocol)", week:3, cats:["agents"],
+    triplets:[
+      {s:"MCP",p:"standardizes",o:"how LLM agents connect to external data sources, tools, and prompt templates",ctx:"Week 3"},
+      {s:"MCP server",p:"exposes",o:"tools, resources, and prompts to any MCP-compliant client",ctx:"Week 3"},
+      {s:"MCP tools",p:"implement",o:"callable actions the LLM can invoke via the protocol",ctx:"Week 3"},
+      {s:"MCP security",p:"mitigates",o:"prompt injection and unauthorized server access risks",ctx:"Week 3"},
+      {s:"MCP",p:"used-by",o:"autonomous research agent to access external APIs as discoverable tool calls",ctx:"Week 5"},
+    ]},
+
+  // WEEK 4 — LANGGRAPH, N8N, AGENTS
+  { id:"langgraph", name:"LangGraph", week:4, cats:["agents"],
+    triplets:[
+      {s:"LangGraph",p:"models",o:"agent control flow as a directed graph of stateful nodes and typed edges",ctx:"Week 4"},
+      {s:"LangGraph",p:"routes",o:"execution via conditional edges based on runtime state or LLM decisions",ctx:"Week 4"},
+      {s:"LangGraph",p:"manages",o:"shared state across all graph traversals in a single typed object",ctx:"Week 4"},
+      {s:"LangGraph",p:"implements",o:"human-in-the-loop checkpoints that pause execution for approval",ctx:"Week 4"},
+      {s:"LangGraph",p:"preferred-when",o:"workflow requires explicit branching, persistent state, or HITL approval",ctx:"Week 4"},
+      {s:"LangGraph",p:"avoid-when",o:"the task is simple and linear with no conditional routing or state management",ctx:"Week 4"},
+      {s:"LangGraph",p:"used-by",o:"autonomous research agent as the stateful multi-step planning engine",ctx:"Week 5"},
+    ]},
+  { id:"n8n", name:"n8n Workflow Automation", week:4, cats:["agents","pm"],
+    triplets:[
+      {s:"n8n",p:"automates",o:"multi-step workflows by connecting nodes for services, transformations, and triggers",ctx:"Week 4"},
+      {s:"n8n",p:"contrasts-with",o:"Zapier on self-hosting flexibility, code execution, and open-source licensing",ctx:"Week 4"},
+      {s:"Webhook",p:"triggers",o:"an n8n workflow via an inbound HTTP POST from an external event source",ctx:"Week 4"},
+      {s:"HMAC signature",p:"prevents",o:"replay attacks and spoofed webhook deliveries in production workflows",ctx:"Week 4–5"},
+      {s:"Schedule trigger",p:"fires",o:"an n8n workflow at defined cron-based time intervals",ctx:"Week 4"},
+      {s:"AI Agent node",p:"executes",o:"LLM-driven agentic logic as a first-class node within n8n workflows",ctx:"Week 4"},
+      {s:"Idempotency",p:"guarantees",o:"that re-executing a workflow produces the same final state without duplicates",ctx:"Week 4"},
+    ]},
+  { id:"react-pattern", name:"ReAct Pattern", week:4, cats:["agents"],
+    triplets:[
+      {s:"ReAct pattern",p:"interleaves",o:"reasoning steps and tool-action invocations in a loop until completion",ctx:"Week 4–5"},
+      {s:"ReAct pattern",p:"produces",o:"an auditable chain of Thought → Action → Observation steps",ctx:"Week 4–5"},
+      {s:"ReAct pattern",p:"fails-when",o:"tool descriptions are imprecise and the model selects the wrong tool",ctx:"Week 4–5"},
+      {s:"ReAct pattern",p:"trades-off",o:"higher latency per step for improved auditability and error recovery",ctx:"Week 4–5"},
+    ]},
+  { id:"guardrails", name:"Guardrails & Prompt Injection", week:4, cats:["agents","ai"],
+    triplets:[
+      {s:"Guardrails (output)",p:"constrains",o:"model outputs via schema validation, content filtering, and policy enforcement",ctx:"Week 4"},
+      {s:"Guardrails (output)",p:"composed-of",o:"schema validators (Pydantic), PII detectors, safety classifiers, HITL checkpoints",ctx:"Week 4"},
+      {s:"Prompt injection",p:"exploits",o:"LLM instruction-following to embed adversarial commands that override system instructions",ctx:"Week 4–8"},
+      {s:"Prompt injection",p:"risks",o:"unauthorized tool invocations, data exfiltration, and policy bypass",ctx:"Week 4–8"},
+      {s:"Prompt injection",p:"mitigated-by",o:"input sanitization, privileged instruction separation, and MCP security controls",ctx:"Week 4"},
+      {s:"PII detection",p:"prevents",o:"privacy leakage in agentic pipelines",ctx:"Week 4"},
+      {s:"Human-in-the-loop",p:"mitigates",o:"unsafe or irreversible agent actions before execution",ctx:"Week 4"},
+    ]},
+  { id:"context-engineering", name:"Context Engineering", week:4, cats:["agents","ai"],
+    triplets:[
+      {s:"Context engineering",p:"manages",o:"what information occupies the LLM context window at each reasoning step",ctx:"Week 4"},
+      {s:"Context rot",p:"degrades",o:"agent reasoning as irrelevant, repeated, or stale tokens accumulate",ctx:"Week 4"},
+      {s:"Attention budget",p:"constrains",o:"the effective number of tokens an LLM can attend to per call",ctx:"Week 4"},
+      {s:"Tool design",p:"determines",o:"how reliably an LLM selects and invokes the correct tool",ctx:"Week 4"},
+    ]},
+
+  // WEEK 5 — PROJECT 3 AUTONOMOUS AGENT
+  { id:"autonomous-agent", name:"Autonomous Research Agent", week:5, cats:["agents"],
+    triplets:[
+      {s:"Autonomous agent",p:"specializes",o:"agentic AI that operates without continuous human supervision",ctx:"Week 4"},
+      {s:"Autonomous agent",p:"fails-when",o:"success metrics are absent or ambiguous, allowing unconstrained sub-goal pursuit",ctx:"Week 4"},
+      {s:"Research agent",p:"composed-of",o:"LangGraph state graph, MCP tool server, Pinecone retrieval, and n8n event triggers",ctx:"Week 5"},
+      {s:"Tool validation",p:"confirms",o:"that tool outputs conform to expected schemas before downstream use",ctx:"Week 5"},
+      {s:"Tool validation",p:"preferred-when",o:"the agent takes irreversible actions that cannot be undone without review",ctx:"Week 5"},
+      {s:"Failure handling",p:"catches",o:"tool errors and retries with exponential backoff before escalating",ctx:"Week 5"},
+      {s:"Scope creep",p:"occurs-when",o:"an agent pursues sub-goals beyond its defined task boundary",ctx:"Week 4"},
+      {s:"Scope creep",p:"mitigated-by",o:"explicit success criteria and tool-call auditing before execution",ctx:"Week 4"},
+    ]},
+
+  // WEEK 6 — PM, AGILE
+  { id:"classical-pm", name:"Classical Project Management", week:6, cats:["pm"],
+    triplets:[
+      {s:"Classical PM",p:"structures",o:"project delivery through sequential phases with fixed scope and upfront planning",ctx:"Week 6"},
+      {s:"WBS",p:"decomposes",o:"project objectives into a hierarchy of measurable, assignable deliverables",ctx:"Week 6"},
+      {s:"Stakeholder analysis",p:"maps",o:"project stakeholders by influence and interest level",ctx:"Week 6"},
+      {s:"Stakeholder analysis",p:"fails-when",o:"key decision-makers are excluded or misclassified by influence level",ctx:"Week 6"},
+      {s:"Risk management",p:"identifies",o:"project risks and prescribes mitigation or contingency actions",ctx:"Week 6"},
+      {s:"PESTLE analysis",p:"scans",o:"political, economic, social, technological, legal, environmental factors",ctx:"Week 6"},
+      {s:"Shadow AI",p:"risks",o:"data leakage when sensitive info is submitted to external LLM APIs without agreements",ctx:"Week 6–8"},
+      {s:"Change management",p:"manages",o:"human and organisational resistance when introducing new tools or processes",ctx:"Week 6"},
+      {s:"Change management",p:"fails-when",o:"stakeholders are not identified or engaged before the change is announced",ctx:"Week 6"},
+      {s:"Impact analysis",p:"quantifies",o:"business and technical risk exposure when restructuring tooling or organization",ctx:"Week 6"},
+    ]},
+  { id:"agile", name:"Agile / Scrum", week:6, cats:["pm"],
+    triplets:[
+      {s:"Scrum",p:"structures",o:"iterative delivery into time-boxed sprints with defined roles, artifacts, and ceremonies",ctx:"Week 6"},
+      {s:"Backlog",p:"prioritizes",o:"all planned work items as a ranked, living list for upcoming sprints",ctx:"Week 6"},
+      {s:"User stories",p:"express",o:"feature requirements from the end user's perspective",ctx:"Week 6"},
+      {s:"Definition of Done",p:"defines",o:"shared team-level completion criteria any story must meet before acceptance",ctx:"Week 6"},
+      {s:"Definition of Done",p:"contrasts-with",o:"acceptance criteria: DoD applies to all stories; AC are story-specific",ctx:"Week 6"},
+      {s:"Story points",p:"estimate",o:"relative effort and complexity as a dimensionless unit",ctx:"Week 6"},
+      {s:"Technical debt",p:"accumulates-when",o:"short-term shortcuts defer proper design, testing, or refactoring",ctx:"Week 6"},
+      {s:"Velocity",p:"measures",o:"story points completed per sprint to forecast future team capacity",ctx:"Week 6"},
+      {s:"Burndown chart",p:"visualizes",o:"remaining work versus elapsed sprint time to forecast completion",ctx:"Week 6"},
+    ]},
+  { id:"jira", name:"Jira & Workflow Tools", week:6, cats:["pm"],
+    triplets:[
+      {s:"Jira",p:"manages",o:"agile boards, sprints, backlogs, and burndown reports for project tracking",ctx:"Week 6"},
+      {s:"n8n–Jira integration",p:"automates",o:"issue creation and status updates in Jira via n8n workflow nodes",ctx:"Week 6"},
+      {s:"Kanban",p:"specializes",o:"Agile flow management through a continuous pull-based board",ctx:"Week 6"},
+      {s:"Lean",p:"specializes",o:"Agile by eliminating waste and optimizing end-to-end value delivery",ctx:"Week 6"},
+      {s:"XP",p:"specializes",o:"Agile with TDD, continuous integration, and pair programming",ctx:"Week 6"},
+    ]},
+
+  // WEEK 7 — EVALUATION
+  { id:"model-evaluation", name:"Model Evaluation", week:7, cats:["eval"],
+    triplets:[
+      {s:"Model evaluation",p:"assesses",o:"LLM output quality across accuracy, coherence, groundedness, and task completion",ctx:"Week 7"},
+      {s:"Benchmark contamination",p:"invalidates",o:"evaluation results when test data appears in model training data",ctx:"Week 7"},
+      {s:"Benchmark saturation",p:"signals",o:"that a benchmark can no longer discriminate between state-of-the-art models",ctx:"Week 7"},
+      {s:"Hallucination",p:"defines",o:"LLM output that is fluent and confident but factually incorrect",ctx:"Week 7"},
+      {s:"Hallucination",p:"reduced-by",o:"RAG grounding, function calling, and structured output validation",ctx:"Week 2–7"},
+      {s:"Calibration",p:"measures",o:"alignment between model's predicted token probabilities and actual outcome frequencies",ctx:"Week 7"},
+    ]},
+  { id:"llm-as-judge", name:"LLM-as-Judge", week:7, cats:["eval"],
+    triplets:[
+      {s:"LLM-as-judge",p:"evaluates",o:"model outputs by prompting a separate LLM to score or rank them",ctx:"Week 7"},
+      {s:"LLM-as-judge",p:"enables",o:"scalable reference-free evaluation without human annotation per sample",ctx:"Week 7"},
+      {s:"LLM-as-judge",p:"risks",o:"systematic positional and verbosity bias when judge and model share training data",ctx:"Week 7"},
+      {s:"LLM-as-judge",p:"fails-when",o:"the evaluation rubric is ambiguous or not grounded in a structured scoring schema",ctx:"Week 7"},
+      {s:"Ground truth evaluation",p:"compares",o:"model outputs against human-verified reference answers",ctx:"Week 7"},
+      {s:"Ablation studies",p:"isolate",o:"the contribution of individual components to overall pipeline performance",ctx:"Week 7"},
+    ]},
+  { id:"ab-testing", name:"A/B Testing & Statistics", week:7, cats:["eval"],
+    triplets:[
+      {s:"A/B testing",p:"compares",o:"two model or prompt variants on a shared population to measure differential impact",ctx:"Week 7"},
+      {s:"t-test",p:"tests",o:"whether the means of two independent groups differ significantly",ctx:"Week 7"},
+      {s:"Power analysis",p:"determines",o:"the minimum sample size required to detect a target effect at a given confidence",ctx:"Week 7"},
+      {s:"Multiple comparisons correction",p:"adjusts",o:"significance thresholds to control false discovery rate across repeated tests",ctx:"Week 7"},
+      {s:"BLEU",p:"measures",o:"n-gram overlap between generated text and human reference translations",ctx:"Week 7"},
+      {s:"ROUGE",p:"measures",o:"recall-oriented n-gram overlap for summarization quality assessment",ctx:"Week 7"},
+    ]},
+  { id:"langsmith", name:"LangSmith", week:7, cats:["eval","agents"],
+    triplets:[
+      {s:"LangSmith",p:"traces",o:"LLM and agent execution chains for debugging and experiment comparison",ctx:"Week 7"},
+      {s:"LangSmith",p:"tracks",o:"evaluation datasets and experiment run history over time",ctx:"Week 7"},
+      {s:"LangSmith",p:"enables",o:"red-team tracing and bias detection across adversarial prompt runs",ctx:"Week 8"},
+      {s:"LangSmith",p:"preferred-when",o:"reproducible experiment comparison across prompt variants is required",ctx:"Week 7"},
+    ]},
+  { id:"business-impact", name:"KPIs & Business Impact", week:7, cats:["eval","pm"],
+    triplets:[
+      {s:"KPI",p:"quantifies",o:"a specific business outcome used to measure AI system value delivery",ctx:"Week 7"},
+      {s:"Business impact",p:"translates",o:"model performance metrics into ROI and strategic value for executive stakeholders",ctx:"Week 7"},
+      {s:"Power BI",p:"visualizes",o:"business metrics and model evaluation results in interactive dashboards",ctx:"Week 7"},
+      {s:"Evaluation dashboard",p:"surfaces",o:"model performance distributions and variant comparison charts",ctx:"Week 7"},
+    ]},
+
+  // WEEK 8 — GREEN, EU AI ACT, GDPR
+  { id:"green-software", name:"Green Software & Sustainable AI", week:8, cats:["green"],
+    triplets:[
+      {s:"SCI",p:"measures",o:"a software system's carbon emissions per unit of functional output",ctx:"Week 8"},
+      {s:"SCI",p:"guides",o:"architectural optimization toward lower-carbon, energy-efficient designs",ctx:"Week 8"},
+      {s:"PUE",p:"measures",o:"total datacenter power consumed divided by IT equipment power (1.0 = perfect)",ctx:"Week 8"},
+      {s:"Scope 1 emissions",p:"covers",o:"direct greenhouse gas emissions from sources owned by the organization",ctx:"Week 8"},
+      {s:"Scope 2 emissions",p:"covers",o:"indirect emissions from purchased electricity used by compute infrastructure",ctx:"Week 8"},
+      {s:"Scope 3 emissions",p:"covers",o:"indirect upstream/downstream emissions including supply chain and cloud embodied carbon",ctx:"Week 8"},
+      {s:"Carbon offsetting",p:"contrasts-with",o:"carbon efficiency: offsetting addresses residual; efficiency reduces at source",ctx:"Week 8"},
+      {s:"GHG Protocol Framework",p:"composed-of",o:"Scope 1, Scope 2, and Scope 3 emission categories",ctx:"Week 8"},
+    ]},
+  { id:"eu-ai-act", name:"EU AI Act", week:8, cats:["legal"],
+    triplets:[
+      {s:"EU AI Act",p:"regulates",o:"AI systems deployed or placed on the EU market across all risk tiers",ctx:"Week 8"},
+      {s:"EU AI Act",p:"classifies",o:"AI systems as unacceptable, high-risk, limited-risk, or minimal-risk",ctx:"Week 8"},
+      {s:"High-risk AI obligations",p:"require",o:"conformity assessment, logging, transparency, and human oversight before deployment",ctx:"Week 8"},
+      {s:"Conformity assessment",p:"required-when",o:"a system is classified as high-risk under Annex III of the EU AI Act",ctx:"Week 8"},
+      {s:"GPAI",p:"subject-to",o:"systemic risk provisions for models exceeding 10²⁵ training FLOPs",ctx:"Week 8"},
+      {s:"Prohibited practices",p:"enumerate",o:"AI uses banned by the Act including social scoring and subliminal manipulation",ctx:"Week 8"},
+      {s:"AI provider",p:"bears",o:"conformity and technical-documentation obligations for systems placed on the market",ctx:"Week 8"},
+      {s:"AI deployer",p:"bears",o:"operational compliance obligations for high-risk AI systems in use",ctx:"Week 8"},
+      {s:"FRIA",p:"required-when",o:"a high-risk AI system is deployed in areas that may affect fundamental rights",ctx:"Week 8"},
+      {s:"Post-market monitoring",p:"obligates",o:"AI providers to continuously track performance, incidents, and near-misses",ctx:"Week 8"},
+      {s:"Model card",p:"implements",o:"the transparency obligation for AI providers to communicate model properties",ctx:"Week 8"},
+      {s:"Red teaming",p:"probes",o:"model outputs for harmful, biased, or policy-violating behavior via adversarial scenarios",ctx:"Week 8"},
+    ]},
+  { id:"gdpr", name:"GDPR & EU Privacy Stack", week:8, cats:["legal"],
+    triplets:[
+      {s:"GDPR",p:"governs",o:"the collection, processing, and transfer of personal data in the EU",ctx:"Week 8"},
+      {s:"GDPR",p:"grants",o:"data subjects rights of access, rectification, erasure, portability, and objection",ctx:"Week 8"},
+      {s:"DPIA",p:"required-when",o:"processing is likely to result in high risk to data subjects' rights",ctx:"Week 8"},
+      {s:"Lawful basis",p:"justifies",o:"each personal data processing activity under GDPR Article 6",ctx:"Week 8"},
+      {s:"Special category data",p:"requires",o:"explicit consent or a specific listed exception for lawful processing",ctx:"Week 8"},
+      {s:"Data controller",p:"determines",o:"the purposes and means of personal data processing",ctx:"Week 8"},
+      {s:"Data processor",p:"required-to",o:"sign a data processing agreement with the controller",ctx:"Week 8"},
+      {s:"Privacy by design",p:"embeds",o:"data protection measures into system architecture from inception",ctx:"Week 8"},
+      {s:"Layered compliance model",p:"stacks",o:"GDPR obligations with sector-specific laws and AI Act requirements",ctx:"Week 8"},
+      {s:"FRIA",p:"contrasts-with",o:"DPIA: DPIA focuses on data protection risks; FRIA covers broader fundamental rights",ctx:"Week 8"},
+    ]},
+
+  // WEEK 9 — FINAL PROJECT
+  { id:"final-delivery", name:"Final Project Delivery", week:9, cats:["pm"],
+    triplets:[
+      {s:"Compliance pack",p:"bundles",o:"EU AI Act conformity evidence and GDPR documentation for the deployed system",ctx:"Week 9"},
+      {s:"POC",p:"validates",o:"that a proposed technical solution can achieve the core functional requirement",ctx:"Week 9"},
+      {s:"POC",p:"contrasts-with",o:"production system: a POC proves feasibility; production meets scalability, security, reliability",ctx:"Week 9"},
+      {s:"Executive summary",p:"composed-of",o:"business context, AI system description, compliance stance, and cost-benefit framing",ctx:"Week 9"},
+      {s:"Handover documentation",p:"transfers",o:"system architecture, configuration decisions, operational runbooks, and known issues",ctx:"Week 9"},
+      {s:"Stakeholder sign-off",p:"gates",o:"project delivery by requiring formal approval before a phase closes or goes live",ctx:"Week 9"},
+      {s:"Risk matrix",p:"classifies",o:"identified AI risks by likelihood and impact for regulatory and stakeholder reporting",ctx:"Week 8–9"},
+    ]},
+
+  // PROVIDERS
+  { id:"providers", name:"AI Providers (OpenAI, Anthropic, Google, Cohere)", week:1, cats:["ai"],
+    triplets:[
+      {s:"OpenAI",p:"offers",o:"GPT-4o, GPT-4.1, o3, Whisper, TTS, DALL-E, and text-embedding-3 models via API",ctx:"Week 1–4"},
+      {s:"OpenAI",p:"known-for",o:"leading chat completions API, developer ecosystem, and function calling support",ctx:"Week 1"},
+      {s:"Anthropic",p:"offers",o:"Claude 3.5 Sonnet, Claude 3 Opus, and Haiku via API and Claude.ai",ctx:"Week 2"},
+      {s:"Anthropic",p:"known-for",o:"Constitutional AI training methodology and safety-focused model development",ctx:"Week 2"},
+      {s:"Google",p:"offers",o:"Gemini model family via Vertex AI and Google AI Studio",ctx:"Week 2"},
+      {s:"Google",p:"known-for",o:"multimodal capability, long context windows, and enterprise data residency via Vertex AI",ctx:"Week 2"},
+      {s:"Cohere",p:"offers",o:"Command R+ generation models, Embed API, and Rerank API",ctx:"Week 3"},
+      {s:"Cohere",p:"known-for",o:"enterprise-grade multilingual embeddings and dedicated reranking endpoint",ctx:"Week 3"},
+      {s:"ElevenLabs",p:"offers",o:"voice cloning, multilingual TTS, and voice design API",ctx:"Week 2"},
+      {s:"ElevenLabs",p:"known-for",o:"highest-quality neural TTS with voice cloning and emotional prosody control",ctx:"Week 2"},
+    ]},
+];
+
+const WEEK_THEMES = {
+  1: "AI basics, Python, ML/NN, GenAI & APIs, speech",
+  2: "Mini-project, prompting, low-code Python, APIs, RAG intro",
+  3: "Project 2, LangChain, RAG pipeline, MCP",
+  4: "LangGraph, n8n, autonomous agents",
+  5: "Project 3 — autonomous research agent",
+  6: "Classical PM, Agile, SilverTrust, migration",
+  7: "Evaluation, A/B testing, BI, Project 5",
+  8: "Green tech, EU AI Act, GDPR, final project kickoff",
+  9: "Final project delivery",
+};
+
+const CAT_COLORS = {
+  ai: "#1a2450", python: "#5a50b0", ml: "#b07820", rag: "#7050c0",
+  agents: "#c04060", pm: "#106868", eval: "#806020",
+  green: "#286820", legal: "#8040b0", speech: "#a04020"
+};
+
+let selectedWeek = "all";
+let selectedCat = "all";
+let searchQuery = "";
+let selectedConcept = null;
+
+function init() {
+  document.getElementById("stat-concepts").textContent = DATA.length;
+  const totalTriplets = DATA.reduce((a,d) => a + d.triplets.length, 0);
+  document.getElementById("stat-triplets").textContent = totalTriplets;
+
+  document.getElementById("search").addEventListener("input", e => {
+    searchQuery = e.target.value.toLowerCase();
+    render();
+  });
+
+  document.querySelectorAll(".filter-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedWeek = btn.dataset.week;
+      render();
+    });
+  });
+
+  document.querySelectorAll(".cat-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedCat = btn.dataset.cat;
+      render();
+    });
+  });
+
+  render();
+}
+
+function filteredData() {
+  return DATA.filter(d => {
+    if (selectedWeek !== "all" && d.week !== parseInt(selectedWeek)) return false;
+    if (selectedCat !== "all" && !d.cats.includes(selectedCat)) return false;
+    if (searchQuery) {
+      const haystack = [
+        d.name,
+        ...d.triplets.map(t => `${t.s} ${t.p} ${t.o} ${t.ctx}`)
+      ].join(" ").toLowerCase();
+      if (!haystack.includes(searchQuery)) return false;
+    }
+    return true;
+  });
+}
+
+function render() {
+  const data = filteredData();
+  const grid = document.getElementById("concepts-grid");
+  const noResults = document.getElementById("no-results");
+  const count = document.getElementById("result-count");
+
+  count.textContent = `${data.length} of ${DATA.length}`;
+
+  if (data.length === 0) {
+    grid.innerHTML = "";
+    noResults.style.display = "block";
+    return;
+  }
+  noResults.style.display = "none";
+
+  // Group by week if showing all
+  if (selectedWeek === "all" && !searchQuery && selectedCat === "all") {
+    // Group by week
+    const weeks = {};
+    data.forEach(d => {
+      if (!weeks[d.week]) weeks[d.week] = [];
+      weeks[d.week].push(d);
+    });
+    grid.innerHTML = Object.entries(weeks).map(([w, concepts]) => `
+      <div class="week-section" style="grid-column: 1/-1;">
+        <div class="week-title">Week ${w}</div>
+        <div class="week-theme">${WEEK_THEMES[w] || ""}</div>
+        <div class="concepts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;">
+          ${concepts.map(d => conceptCard(d)).join("")}
+        </div>
+      </div>
+    `).join("");
+  } else {
+    grid.innerHTML = data.map(d => conceptCard(d)).join("");
+  }
+
+  grid.querySelectorAll(".concept-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const id = card.dataset.id;
+      const concept = DATA.find(d => d.id === id);
+      selectConcept(concept);
+      grid.querySelectorAll(".concept-card").forEach(c => c.classList.remove("selected"));
+      card.classList.add("selected");
+    });
+  });
+}
+
+function conceptCard(d) {
+  const accentColor = d.cats.map(c => CAT_COLORS[c]).filter(Boolean)[0] || "#555";
+  const isSelected = selectedConcept && selectedConcept.id === d.id;
+  return `
+    <div class="concept-card${isSelected ? " selected" : ""}" data-id="${d.id}"
+         style="--card-accent: ${accentColor}">
+      <div class="concept-name">${d.name}</div>
+      <div class="concept-week">Week ${d.week} · ${d.triplets.length} triplet${d.triplets.length!==1?"s":""}</div>
+      <div class="concept-tags">
+        ${d.cats.map(c => `<span class="tag cat-tag" style="--cat-color:${CAT_COLORS[c]||"#555"}">${c}</span>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function selectConcept(concept) {
+  selectedConcept = concept;
+  const panel = document.getElementById("detail-panel");
+
+  // Find related concepts (concepts that share triplet subjects/objects)
+  const relatedNames = new Set();
+  concept.triplets.forEach(t => {
+    relatedNames.add(t.s.toLowerCase());
+    const words = t.o.toLowerCase().split(/\s+/);
+    DATA.forEach(d => {
+      if (d.id !== concept.id && d.name.split(/\s+/).some(w => words.includes(w.toLowerCase()))) {
+        relatedNames.add(d.name.toLowerCase());
+      }
+    });
+  });
+  const related = DATA.filter(d => d.id !== concept.id && (
+    concept.triplets.some(t => t.s.toLowerCase().includes(d.name.toLowerCase().split(" ")[0]) ||
+                               t.o.toLowerCase().includes(d.name.toLowerCase().split(" ")[0]))
+  )).slice(0, 6);
+
+  panel.innerHTML = `
+    <div class="detail-header">
+      <div class="detail-name">${concept.name}</div>
+      <span class="detail-week-badge">Week ${concept.week} — ${WEEK_THEMES[concept.week] || ""}</span>
+      <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;">
+        ${concept.cats.map(c => `<span class="tag cat-tag" style="--cat-color:${CAT_COLORS[c]||"#555"}">${c}</span>`).join("")}
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Relationships &amp; triplets (${concept.triplets.length})</div>
+      ${concept.triplets.map(t => `
+        <div class="triplet">
+          <div class="triplet-subject">${t.s}</div>
+          <div class="triplet-pred">${t.p}</div>
+          <div class="triplet-obj">
+            ${t.o}
+            <span class="triplet-context">${t.ctx}</span>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+
+    ${related.length > 0 ? `
+    <div class="detail-section">
+      <div class="detail-section-title">Related concepts</div>
+      <div class="related-links">
+        ${related.map(r => `
+          <div class="related-link" onclick="jumpTo('${r.id}')">
+            <span style="color:${(r.cats.map(c=>CAT_COLORS[c]).filter(Boolean)[0])||"#555"};font-size:8px;">⬡</span>
+            <span style="flex:1">${r.name}</span>
+            <span class="related-link-pred">W${r.week}</span>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+    ` : ""}
+  `;
+}
+
+function jumpTo(id) {
+  const concept = DATA.find(d => d.id === id);
+  if (!concept) return;
+  // Reset filters to show this concept
+  selectedWeek = "all";
+  selectedCat = "all";
+  searchQuery = "";
+  document.getElementById("search").value = "";
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.toggle("active", b.dataset.week === "all"));
+  document.querySelectorAll(".cat-btn").forEach(b => b.classList.toggle("active", b.dataset.cat === "all"));
+  selectConcept(concept);
+  render();
+  setTimeout(() => {
+    const card = document.querySelector(`[data-id="${id}"]`);
+    if (card) { card.classList.add("selected"); card.scrollIntoView({behavior:"smooth",block:"center"}); }
+  }, 50);
+}
+
+init();
+</script>
+</body>
+</html>
