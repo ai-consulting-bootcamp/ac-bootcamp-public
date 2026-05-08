@@ -1,1 +1,6 @@
 notebook-references-mapping.md
+*.env
+*.wav
+*.csv
+*.gitignore
+*.pyc

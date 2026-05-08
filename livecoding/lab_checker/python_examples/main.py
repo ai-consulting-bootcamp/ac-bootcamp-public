@@ -1,0 +1,273 @@
+import re
+import shutil
+from pathlib import Path
+
+import gradio as gr
+
+import src.data_processor as dp
+import src.llm_processor as llm
+import src.tts_generator as tts
+
+
+DATA_DIR = Path("data")
+PDF_DIR = DATA_DIR / "pdf"
+TEXT_DIR = DATA_DIR / "text"
+URL_DIR = DATA_DIR / "url"
+
+OUTPUT_DIR = Path("outputs")
+TRANSCRIPT_PATH = OUTPUT_DIR / "transcript.txt"
+
+URL_REGEX = re.compile(
+    r"^(https?:\/\/)"
+    r"(([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})"
+    r"(\/[^\s]*)?$"
+)
+
+
+def is_valid_url(url: str) -> bool:
+    return bool(URL_REGEX.match(url.strip()))
+
+
+def log_section(title):
+    print("\n" + "=" * 60)
+    print(title)
+    print("=" * 60)
+
+
+def reset_data():
+    log_section("🧹 STEP 1 — RESET ENVIRONMENT")
+
+    if DATA_DIR.exists():
+        shutil.rmtree(DATA_DIR)
+
+    PDF_DIR.mkdir(parents=True, exist_ok=True)
+    TEXT_DIR.mkdir(parents=True, exist_ok=True)
+    URL_DIR.mkdir(parents=True, exist_ok=True)
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def has_source_data(pdf_file, url_input, text_input):
+    return bool(
+        pdf_file is not None
+        or (url_input and url_input.strip())
+        or (text_input and text_input.strip())
+    )
+
+
+def update_generate_button(pdf_file, url_input, text_input):
+    return gr.update(interactive=has_source_data(pdf_file, url_input, text_input))
+
+
+def pipeline(pdf_file, url_input, text_input, target_audience):
+    log_section("📥 INPUT RECEIVED")
+
+    reset_data()
+
+    sources = {
+        "pdf_path": None,
+        "text_path": None,
+        "url_path": None,
+        "url": None,
+        "target_audience": target_audience,
+    }
+
+    log_section("💾 STEP 2 — SAVE SOURCES")
+
+    if pdf_file is not None:
+        pdf_destination = PDF_DIR / Path(pdf_file.name).name
+        shutil.copy(pdf_file.name, pdf_destination)
+        sources["pdf_path"] = str(pdf_destination)
+        print(f"PDF saved → {pdf_destination}")
+
+    if text_input and text_input.strip():
+        text_destination = TEXT_DIR / "input.txt"
+        with open(text_destination, "w", encoding="utf-8") as f:
+            f.write(text_input.strip())
+
+        sources["text_path"] = str(text_destination)
+        print(f"Text saved → {text_destination}")
+
+    if url_input and url_input.strip():
+        clean_url = url_input.strip()
+
+        if not is_valid_url(clean_url):
+            raise gr.Error("Invalid URL format. Use a URL starting with http:// or https://")
+
+        url_destination = URL_DIR / "url.txt"
+
+        with open(url_destination, "w", encoding="utf-8") as f:
+            f.write(clean_url)
+
+        sources["url_path"] = str(url_destination)
+        sources["url"] = clean_url
+
+        print(f"URL saved → {url_destination}")
+        print(f"URL value → {clean_url}")
+
+    if not any([sources["pdf_path"], sources["text_path"], sources["url"]]):
+        raise gr.Error("Provide at least one source.")
+
+    print(f"Sources dictionary → {sources}")
+
+    log_section("🔍 STEP 3 — PROCESS SOURCES")
+    summary = dp.process_sources(sources)
+
+    print(f"Summary generated ({len(summary)} characters).")
+    print("\nSummary preview:")
+    print(summary[:800])
+
+    log_section("📝 STEP 4 — GENERATE PODCAST SCRIPT")
+    script = llm.generate_podcast_script(
+        summary_text=summary,
+        target_audience=target_audience,
+    )
+
+    segment_count = script.count("[Speaker1]:") + script.count("[Speaker2]:")
+    print(f"Podcast script generated ({len(script)} characters, {segment_count} segments).")
+    print("\nScript preview:")
+    print(script[:800])
+
+    log_section("💿 STEP 5 — SAVE TRANSCRIPT")
+    with open(TRANSCRIPT_PATH, "w", encoding="utf-8") as f:
+        f.write(script)
+
+    print(f"Transcript saved → {TRANSCRIPT_PATH}")
+
+    log_section("🎙️ STEP 6 — GENERATE AUDIO")
+    audio_path = tts.generate_podcast_audio(script)
+    print(f"Audio generated → {audio_path}")
+
+    log_section("📦 DONE")
+    print(f"Audio: {audio_path}")
+    print(f"Transcript: {TRANSCRIPT_PATH}")
+
+    return audio_path, script, str(TRANSCRIPT_PATH)
+
+
+def start_processing():
+    return "⏳ Generating podcast...", gr.update(visible=False)
+
+
+def finish_processing(audio, transcript, transcript_file):
+    return "", gr.update(visible=True), audio, transcript, transcript_file
+
+
+with gr.Blocks(title="AI Podcast Studio") as demo:
+    gr.Markdown("""
+# 🎙️ AI Podcast Studio
+
+Turn your content into a podcast.
+
+**Steps**
+1. Provide at least one source (PDF, URL, or Text)
+2. Choose the target audience
+3. Click Generate Podcast
+""")
+
+    with gr.Row():
+        with gr.Column(scale=1):
+            gr.Markdown("## 🧾 Input")
+
+            gr.Markdown("### 📚 Sources")
+            gr.Markdown("_Provide at least one source. All sources are treated equally._")
+
+            with gr.Group():
+                pdf_file = gr.File(
+                    label="PDF",
+                    file_types=[".pdf"],
+                )
+
+            with gr.Group():
+                url_input = gr.Textbox(
+                    label="URL",
+                    placeholder="https://example.com/article",
+                )
+
+            with gr.Group():
+                text_input = gr.Textbox(
+                    label="Text",
+                    lines=8,
+                )
+
+            gr.Markdown("### ⚙️ Configuration")
+
+            target_audience = gr.Dropdown(
+                choices=["Kids", "General Public", "Professionals", "Experts"],
+                value="General Public",
+                label="Target Audience",
+            )
+
+            submit_button = gr.Button(
+                "🎙️ Generate Podcast",
+                size="lg",
+                variant="primary",
+                interactive=False,
+            )
+
+            status = gr.Markdown("")
+
+        with gr.Column(scale=1):
+            gr.Markdown("## 🎧 Output")
+
+            audio_output = gr.Audio(
+                type="filepath",
+                label="Podcast",
+                interactive=False,
+            )
+
+            transcript_output = gr.Textbox(
+                label="Transcript",
+                lines=20,
+                interactive=False,
+            )
+
+            transcript_download = gr.File(
+                label="Download Transcript",
+                interactive=False,
+            )
+
+    pdf_file.change(
+        fn=update_generate_button,
+        inputs=[pdf_file, url_input, text_input],
+        outputs=submit_button,
+    )
+
+    url_input.change(
+        fn=update_generate_button,
+        inputs=[pdf_file, url_input, text_input],
+        outputs=submit_button,
+    )
+
+    text_input.change(
+        fn=update_generate_button,
+        inputs=[pdf_file, url_input, text_input],
+        outputs=submit_button,
+    )
+
+    submit_button.click(
+        fn=start_processing,
+        inputs=[],
+        outputs=[status, submit_button],
+    ).then(
+        fn=pipeline,
+        inputs=[pdf_file, url_input, text_input, target_audience],
+        outputs=[audio_output, transcript_output, transcript_download],
+        show_progress=True,
+    ).then(
+        fn=finish_processing,
+        inputs=[audio_output, transcript_output, transcript_download],
+        outputs=[
+            status,
+            submit_button,
+            audio_output,
+            transcript_output,
+            transcript_download,
+        ],
+    )
+
+
+demo.queue()
+
+
+if __name__ == "__main__":
+    demo.launch(theme=gr.themes.Default(spacing_size="sm"))
