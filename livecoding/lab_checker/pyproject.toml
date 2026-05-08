@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codecheck"
+version = "0.1.0"
+description = "Generate code-comprehension quizzes for a single Python file."
+requires-python = ">=3.8"
+dependencies = ["openai>=2.0.0"]
+
+[tool.setuptools]
+packages = ["codecheck"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

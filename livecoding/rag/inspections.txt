@@ -1,0 +1,51 @@
+{'messages': [HumanMessage(content='What are the uniform rules for playing Quidditch?', additional_kwargs={}, response_metadata={}, id='886a3c61-1191-4aea-b967-a53571616dbb'),
+  
+  AIMessage(content='', additional_kwargs={'refusal': None},
+   response_metadata={'token_usage': {'completion_tokens': 35, 'prompt_tokens': 182, 'total_tokens': 217,
+    'completion_tokens_details': {'accepted_prediction_tokens': 0, 'audio_tokens': 0, 'reasoning_tokens': 0, 'rejected_prediction_tokens': 0}, 
+    'prompt_tokens_details': {'audio_tokens': 0, 'cached_tokens': 0}}, 'model_provider': 'openai', 'model_name': 'gpt-5.4-mini-2026-03-17', 
+    'system_fingerprint': None, 'id': 'chatcmpl-DdBhn8MBCBkiCVm17bk7RjwP1cggA', 'service_tier': 'default', 'finish_reason': 'tool_calls', 'logprobs': None},
+     id='lc_run--019e06e5-69cc-72e1-8761-f847da52ca3d-0', 
+     tool_calls=[{'name': 'pinecone_search', 
+     args': {'query': 'uniform rules for playing Quidditch official rules uniform requirements attire clothing equipment player uniform rules'}, 
+     'id': 'call_cPM2ZYRoZddQKBUrIaCjFTG7', 'type': 'tool_call'}], invalid_tool_calls=[], usage_metadata={'input_tokens': 182, 'output_tokens': 35, 'total_tokens': 217, 'input_token_details': {'audio': 0, 'cache_read': 0}, 'output_token_details': {'audio': 0, 'reasoning': 0}}),
+  
+  
+  ToolMessage(content="[Document(id='section-8', metadata={'body': [], 'level': 'rule', 'page': 2.0},
+   page_content='3.4.2. PSU IM Quidditch Rules 2 As of 10/18/2017 If a broom breaks during game play, it must be replaced before its player can continue playing 3.5.\
+    Game Balls 3.5.1. Quaffle : A volleyball (1) thrown/kicked by the chasers through the hoops to score 10 points. 3.5.2. Bludgers : Dodgeballs (3) used only by the
+     beaters at opposing players to knock them out. 3.5.3. Snitch : A tennis ball inside of a long yellow sock tucked in the back of the snitch runner’s shorts/pants.
+      Once the snitch is snatched the game is over. The seekers are the only players who can chase after the snitch. 3.5.4. All balls (excluding the snitch) must be 
+      stationary and resting in their respective positions on the pitch at the start of the game. The quaffle must be placed at one of the ball marks closest to the 
+      center spot. 3.5.5. If the ball goes out of bounds, possession of the ball will be granted to the other team. 3.6. All players must wear a headband to indicate
+       their position (chasers=white, beaters=black, keepers=green, seekers=yellow). Only sweatbands and headbands will be allowed in terms of headwear. No jewelry,
+        bandanas/headbands with knots, or hats. 3.7. Casts, braces, or any other item deemed to be dangerous by the official or supervisor may not be worn during the 
+        game. 3.8. Any player that is bleeding MUST leave the game immediately. The bleeding must be stopped and the wound securely covered with a bandage before the
+         player can continue. If there is blood on any clothing it must be changed before the player resumes play.'), Document(id='section-7', metadata={'body': [], 
+         'level': 'rule', 'page': 1.0}, page_content='3.1. No jewelry or metal (earrings, necklaces, bracelets, rings, watches, hair clips, etc.) will be allowed 
+         at any time. Players must remove these items immediately or leave the game. Taping is not permitted. 3.1.1. Medical and religious jewelry must be pre-approved
+          by the Intramural Sports Coordinator. 3.2. All participants must wear close-toed athletic shoes. Rubber and plastic cleats are allowed; metal cleats are 
+          prohibited. 3.3. Teams must be wearing the appropriate color uniforms that are indicated on the game schedule. Home team will wear white shirts and the away 
+          team will wear dark shirts. Grey shirts are not permitted for Intramural contests. 3.4. Intramural Sports will provide all quidditch equipment including hoops,
+           game balls, brooms, and player position headbands. Players may bring their own broom and position headbands. Brooms must be 32-42 inches long and be made of
+            wood or plastic. They cannot exceed 48 inches in total length (including bristles). 3.4.1. Brooms with splinters or sharp points are not allowed.'), 
+            Document(id='section-3', metadata={'body': [], 'level': 'rule', 'page': 1.0}, page_content='1.1. The rules of US Quidditch will apply in all cases,
+             except when a special Portland State University Intramural sports rule applies.'), Document(id='section-1', metadata={'body': ['Quidditch Rules –
+              Portland State Intramural Sports'], 'level': 'rule', 'page': 1.0}, page_content='PSU IM Quidditch Rules 1 As of 10/18/2017')]", name='pinecone_search',
+               id='ab14085f-f565-4d86-9e0b-c47628a0feff', tool_call_id='call_cPM2ZYRoZddQKBUrIaCjFTG7'),
+
+
+  AIMessage(content=
+  'The uniform-related rules for Quidditch in these rules are:\n\n- 
+  **No jewelry or metal**: Earrings, necklaces, bracelets, rings, watches, hair clips, etc. are not allowed.
+  \n- **Medical/religious jewelry**: Allowed only if **pre-approved** by the Intramural Sports Coordinator.\n-
+   **Footwear**: Players must wear **close-toed athletic shoes**.\n- **Cleats**: **Rubber and plastic cleats** are allowed; 
+   **metal cleats are prohibited**.\n- **Team shirts/uniforms**: Teams must wear the **appropriate color uniforms**
+    listed on the schedule.\n  - **Home team**: white shirts\n  - **Away team**: dark shirts\n  -
+     **Grey shirts are not permitted**\n- **Headwear / position headbands**:\n  - All players must wear a **headband indicating position**\n  -
+      Only **sweatbands and headbands** are allowed as headwear\n  - **No hats, bandanas/headbands with knots, or jewelry**\n- **Brooms**
+      : If considered part of uniform/equipment, they must be **32–42 inches long**, made of **wood or plastic**, and no more than **48 inches
+      total length including bristles**.\n- **Unsafe items**: Casts, braces, or anything deemed dangerous by the official/supervisor may not be worn.\n\
+      nIf you want, I can also summarize the **full player equipment rules** in one short checklist.', 
+      
+      additional_kwargs={'refusal': None}, response_metadata={'token_usage': {'completion_tokens': 309, 'prompt_tokens': 1048, 'total_tokens': 1357, 'completion_tokens_details': {'accepted_prediction_tokens': 0, 'audio_tokens': 0, 'reasoning_tokens': 0, 'rejected_prediction_tokens': 0}, 'prompt_tokens_details': {'audio_tokens': 0, 'cached_tokens': 0}}, 'model_provider': 'openai', 'model_name': 'gpt-5.4-mini-2026-03-17', 'system_fingerprint': None, 'id': 'chatcmpl-DdBhqqsrqYssSTBw8ej3G89MAy4fw', 'service_tier': 'default', 'finish_reason': 'stop', 'logprobs': None}, id='lc_run--019e06e5-7960-7681-b04d-3479982049ba-0', tool_calls=[], invalid_tool_calls=[], usage_metadata={'input_tokens': 1048, 'output_tokens': 309, 'total_tokens': 1357, 'input_token_details': {'audio': 0, 'cache_read': 0}, 'output_token_details': {'audio': 0, 'reasoning': 0}})]}
