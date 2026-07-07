@@ -1,19 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# # Python Review
-# 
-# This notebook contains all the code examples from the Python Review lesson. The teacher will go throught them together. Markdown cells are left mostly empty. Take notes in these cells for the afternoon class.
-# 
-
-# ## Basic Python Concepts
-# 
-
-# ### Variables
-# 
-
-# In[ ]:
-
 
 name = "Python"
 age = 30
@@ -25,12 +9,6 @@ message = f"Hello, {name}"
 
 print(result)
 print(message)
-
-
-# ### Lists
-# 
-
-# In[ ]:
 
 
 fruits = ["apple", "banana", "orange"]
@@ -47,12 +25,6 @@ fruits.pop()
 fruits.insert(1, "mango")
 
 print(fruits)
-
-
-# ### Dictionaries
-# 
-
-# In[ ]:
 
 
 student = {
@@ -75,13 +47,6 @@ values = student.values()
 print(keys)
 print(values)
 
-
-# ### Sets
-# 
-
-# In[ ]:
-
-
 numbers = {1, 2, 3, 4, 5}
 colors = {"red", "blue", "green"}
 
@@ -93,13 +58,6 @@ intersection = numbers & {4, 5, 6}
 print(numbers)
 print(union)
 print(intersection)
-
-
-# ### If/Else
-# 
-
-# In[ ]:
-
 
 age = 20
 if age >= 18:
@@ -121,13 +79,6 @@ else:
 
 print(grade)
 
-
-# ### For Loops
-# 
-
-# In[ ]:
-
-
 fruits = ["apple", "banana", "orange"]
 for fruit in fruits:
     print(fruit)
@@ -138,24 +89,10 @@ for i in range(5):
 for index, fruit in enumerate(fruits):
     print(f"{index}: {fruit}")
 
-
-# ### While Loops
-# 
-
-# In[ ]:
-
-
 count = 0
 while count < 5:
     print(count)
     count += 1
-
-
-# ### Functions
-# 
-
-# In[ ]:
-
 
 def greet(name):
     return f"Hello, {name}!"
@@ -171,15 +108,6 @@ total_with_custom_tax = calculate_total(100, 0.15)
 
 print(total)
 print(total_with_custom_tax)
-
-
-# ## Advanced Topics
-# 
-
-# ### Classes
-# 
-
-# In[ ]:
 
 
 class Student:
@@ -209,18 +137,6 @@ print(student1.introduce())
 print(f"Average: {student1.get_average()}")
 
 
-# ### Import Libraries - Pandas
-# 
-
-# In[ ]:
-
-
-# Notebook-only setup command: get_ipython().system('pip install pandas')
-
-
-# In[ ]:
-
-
 import pandas as pd
 
 data = {
@@ -234,11 +150,6 @@ print(df.head())
 print(df["age"].mean())
 print(df[df["score"] > 85])
 
-
-# ### Import Libraries - JSON
-# 
-
-# In[ ]:
 
 
 import json
@@ -257,17 +168,6 @@ json_output = json.dumps(student_dict)
 print(json_output)
 
 
-# ### API Response Parser
-# 
-# Parse JSON strings from API responses (like from AI models) and extract specific fields.
-# 
-
-# In[ ]:
-
-
-import json
-
-# Simulated API response from an AI model (like OpenAI)
 api_response_json = '''
 {
   "id": "chatcmpl-abc123",
@@ -295,33 +195,15 @@ api_response_json = '''
 # Parse the JSON string
 response_data = json.loads(api_response_json)
 
-
-# #### Extract Generated Text
-# 
-
-# In[ ]:
-
-
 # Extract the generated text from nested structure
 generated_text = response_data["choices"][0]["message"]["content"]
 print(f"Generated text: {generated_text}")
 
 
 # #### Extract Model Information
-# 
 
-# In[ ]:
-
-
-# Extract model name
 model_name = response_data["model"]
 print(f"Model used: {model_name}")
-
-
-# #### Extract Token Usage
-# 
-
-# In[ ]:
 
 
 # Extract token usage information
@@ -331,23 +213,12 @@ completion_tokens = response_data["usage"]["completion_tokens"]
 print(f"Token usage - Total: {total_tokens}, Prompt: {prompt_tokens}, Completion: {completion_tokens}")
 
 
-# #### Extract Additional Fields
-# 
-
-# In[ ]:
-
 
 # Extract multiple fields at once
 response_id = response_data["id"]
 finish_reason = response_data["choices"][0]["finish_reason"]
 print(f"Response ID: {response_id}")
 print(f"Finish reason: {finish_reason}")
-
-
-# #### Multiple Choices Example
-# 
-
-# In[ ]:
 
 
 # Example: Parse another API response with multiple choices
@@ -371,14 +242,7 @@ best_choice = max(data["choices"], key=lambda x: x["score"])
 print(f"Best choice: {best_choice['text']} (score: {best_choice['score']})")
 
 
-# ### Common Import Patterns
-# 
-
-# In[ ]:
-
-
 import pandas as pd
-
 
 from math import sqrt, pi
 print(sqrt(16))
